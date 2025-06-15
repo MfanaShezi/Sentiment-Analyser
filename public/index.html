@@ -23,21 +23,26 @@
         const response =document.getElementById('response');
         const  input =document.getElementById('input');
         const formElement = document.getElementById('form');
+        console.log(response.innerText);
         
         formElement.addEventListener('submit', event => {
             event.preventDefault();
-            fetch('/',{
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    text: input.value
-                })
-            }).then(res=> res.json())
+
+            const ticker = input.value.trim().toUpperCase();
+            console.log(ticker);
+
+            if(!ticker){
+                response.innerText = 'Please enter a ticker symbol.';
+                return;
+            }
+
+            fetch(`/api/analyse/${ticker}`,{
+                method: 'GET',
+            })
+            .then(res=> res.json())
             .then(res=>{
-                response.innerText= res[0]?.label === 'Positive'.toUpperCase() ? 'Positive' :'Negative';
-                //input.value=' ';
+               response.innerText = `Ticker : ${res.sentiment}`
+               // response.innerText =
             })
         });
     </script>
