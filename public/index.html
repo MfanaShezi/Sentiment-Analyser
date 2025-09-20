@@ -13,15 +13,15 @@
             <form id="form" action=""> 
                 <textarea id="input" type="text" class="form-control form-control-lg " rows="3"></textarea>
                
-                <textarea id="response" readonly class="form-control form-control-lg  my-2 text-start" rows="2">Waiting to process.......... </textarea>
+                <textarea id="response" readonly class="form-control form-control-lg my-2 text-start" rows="2">Waiting to process..........</textarea>
              
-                  <input type="submit" class="btn btn-primary" value="Process">
+                <input type="submit" class="btn btn-primary" value="Process">
             </form>
         </div>
     </div>
     <script>
-        const response =document.getElementById('response');
-        const  input =document.getElementById('input');
+        const response = document.getElementById('response');
+        const input = document.getElementById('input');
         const formElement = document.getElementById('form');
         console.log(response.innerText);
         
@@ -36,14 +36,25 @@
                 return;
             }
 
-            fetch(`/api/analyse/${ticker}`,{
+            // Show loading message
+            response.innerText = 'Analyzing sentiment...';
+
+            fetch(`/api/analyse/${ticker}`, {
                 method: 'GET',
             })
-            .then(res=> res.json())
-            .then(res=>{
-               response.innerText = `Ticker : ${res.sentiment}`
-               // response.innerText =
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.json();
             })
+            .then(res => {
+                response.innerText = `Ticker: ${ticker} - Sentiment: ${res.sentiment}`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                response.innerText = `Error analyzing sentiment for ${ticker}: ${error.message}`;
+            });
         });
     </script>
 </body>
