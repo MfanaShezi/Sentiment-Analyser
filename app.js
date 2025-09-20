@@ -13,7 +13,15 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middleware
-app.use(cors()); // Enable CORS for cross-origin requests
+// Simple CORS configuration to allow all origins
+const corsOptions = {
+    origin: true, // Allow all origins
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions)); // Enable CORS for cross-origin requests
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
