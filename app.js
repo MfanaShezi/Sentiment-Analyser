@@ -45,7 +45,7 @@ app.get('/api/analyse/:ticker', async (req, res) => {
 
         res.json({
             ticker: ticker,
-            sentiment: result,
+            Results: result,
             timestamp: new Date().toISOString(),
             status: 'success'
         });

@@ -3,7 +3,10 @@ import { provideDataFeed } from './feed.js';
 
 // Initialize the sentiment analysis pipeline once
 let sentimentPipeline;
-
+let PositiveArticles ;
+let NegativeArticles ;
+let NeutralArticles;
+const Threshold=0.7;
 // Initialize pipeline
 async function initializePipeline() {
     try {
@@ -16,6 +19,7 @@ async function initializePipeline() {
 }
 
 async function analyzeSentiment(ticker) {
+   
     // Initialize pipeline if not already done
     if (!sentimentPipeline) {
         await initializePipeline();
@@ -24,6 +28,10 @@ async function analyzeSentiment(ticker) {
     // Initialize variables for this analysis session
     let Totalscore = 0;
     let articl_num = 0;
+    PositiveArticles = 0;
+    NegativeArticles = 0;
+    NeutralArticles = 0;
+
     
     const feed = await provideDataFeed(ticker);
     console.log('Feed data received for:', ticker); 
@@ -33,10 +41,13 @@ async function analyzeSentiment(ticker) {
         console.error('No valid feed data returned for ticker:', ticker);
         return {
             sentiment: 'No data available',
-            score: 0,
-            confidence: 0,
-            articlesProcessed: 0,
-            totalArticles: 0
+            // score: 0,
+            // confidence: 0,
+            positiveArticles: PositiveArticles,
+            negativeArticles: NegativeArticles,
+            neutralArticles: NeutralArticles,
+            articlesProcessed: articl_num,
+            totalArticles: feed.items.length
         };
     }
 
@@ -76,11 +87,17 @@ async function analyzeSentiment(ticker) {
             const score = result[0].score;
             
             if (label === 'POSITIVE') {
-                Totalscore += score;
+                //Totalscore += score;
+                if(score >= Threshold) PositiveArticles++;
                 articl_num++;
             }
             else if (label === 'NEGATIVE') {
-                Totalscore -= score;
+                //Totalscore -= score;
+                if(score >= Threshold) NegativeArticles++;
+                articl_num++;
+            }
+            else if( label === 'NEUTRAL'){
+                 if(score >= Threshold) NeutralArticles++;
                 articl_num++;
             }
             
@@ -90,33 +107,48 @@ async function analyzeSentiment(ticker) {
         }
     }
 
-    console.log(`${ticker} - Total Score: ${Totalscore.toFixed(3)}`);
-    console.log(`${ticker} - Articles processed: ${articl_num}`);
+    //console.log(`${ticker} - Total Score: ${Totalscore.toFixed(3)}`);
+    //console.log(`${ticker} - Articles processed: ${articl_num}`);
     
     // Calculate final score
-    let final_score = articl_num > 0 ? Totalscore / articl_num : 0;
-    console.log(`${ticker} - Final average score: ${final_score.toFixed(3)}`);
+    // let final_score = articl_num > 0 ? Totalscore / articl_num : 0;
+    // console.log(`${ticker} - Final average score: ${final_score.toFixed(3)}`);
     
     // Determine sentiment category and return structured data
     let sentimentLabel;
-    if (final_score >= 0.2) {
+    // if (final_score >= 0.2) {
+    //     sentimentLabel = 'Positive';
+    // }
+    // else if (final_score <= -0.2) {
+    //     sentimentLabel = 'Negative';
+    // }
+    // else {
+    //     sentimentLabel = 'Neutral';
+    // }
+    if(PositiveArticles > NegativeArticles && PositiveArticles/articl_num >= Threshold){
         sentimentLabel = 'Positive';
     }
-    else if (final_score <= -0.2) {
+    else if(NegativeArticles > PositiveArticles && NegativeArticles/articl_num >= Threshold){
         sentimentLabel = 'Negative';
     }
-    else {
-        sentimentLabel = 'Neutral';
+    else{
+        sentimentLabel = 'Inconclusive';
+
     }
+    console.log(`Ticker:${ticker}\nSentiment:${sentimentLabel}\nPositive Articles:${PositiveArticles}\nNegative Articles:${NegativeArticles}\nNeutral Articles:${NeutralArticles}\nArticles Processed:${articl_num}\n`);
     
     return {
         sentiment: sentimentLabel,
-        score: Math.abs(final_score),
-        rawScore: final_score,
-        confidence: Math.abs(final_score),
+        // score: Math.abs(final_score),
+        // rawScore: final_score,
+        // confidence: Math.abs(final_score),
+        positiveArticles: PositiveArticles,
+        negativeArticles: NegativeArticles,
+        neutralArticles: NeutralArticles,
         articlesProcessed: articl_num,
         totalArticles: feed.items.length
     };
+   
 }
 
 export async function GenerateSentiment(ticker) {
